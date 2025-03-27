@@ -8,6 +8,7 @@ using PoC.Worker.Rebus.Setup;
 using PoC.Worker.Rebus.WorkerHandler;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
+using Rebus.Sagas.Idempotent;
 using Rebus.Serialization.Json;
 
 var host = Host.CreateDefaultBuilder()
@@ -19,7 +20,11 @@ var host = Host.CreateDefaultBuilder()
         var mongoDatabase = mongoClient.GetDatabase(Constants.MongoDbName);
 
         services.AddRebus(config => config
-            .Options(o => o.SetNumberOfWorkers(1)) // example setting workers to 5.
+            //.Options(o =>
+            //o.EnableIdempotentSagas() // Saw no change in behavior when this was enabled.
+            //////o.SetNumberOfWorkers(1)
+            //)
+
             .Transport(t => t.UseRabbitMq(Constants.RabbitMqConnectionString, Constants.BulkQueueName))
             //.Routing(r => r.TypeBased().Map<BulkProcessingRequest>(Constants.BulkQueueName)) // Explicit mapping
             .Routing(r => r.TypeBased().MapFallback(Constants.BulkQueueName)) // Automatically routes all messages to this queue

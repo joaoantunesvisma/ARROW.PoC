@@ -36,8 +36,8 @@ namespace PoC.Worker.Rebus.Setup
             // Define index details
             var ttlIndexes = new List<(string IndexName, Expression<Func<BulkProcessingSagaData, object>> Field, TimeSpan Expiry)>
             {
-                ("CompletedAtUtc_TTL", saga => saga.CompletedAtUtc, TimeSpan.FromMinutes(1)),
-                ("CreatedAtUtc_TTL", saga => saga.CreatedAtUtc, TimeSpan.FromMinutes(5))
+                ("CompletedAtUtc_TTL", saga => saga.CompletedAtUtc, TimeSpan.FromMinutes(30)),
+                ("CreatedAtUtc_TTL", saga => saga.CreatedAtUtc, TimeSpan.FromMinutes(3600))
             };
 
             // Process each TTL index

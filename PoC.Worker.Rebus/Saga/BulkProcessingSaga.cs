@@ -54,6 +54,7 @@ namespace PoC.Worker.Rebus.Saga
         {
             Data.ProcessedBatches++;
             Data.LastUpdatedAtUtc = DateTime.UtcNow;
+            //Data.ProcessedMessageIds.Add(message.MessageId);
 
             Console.WriteLine($"[SAGA] Processed {Data.ProcessedBatches}/{Data.TotalBatches} batches for RequestId {message.RequestId}.");
 
@@ -68,6 +69,14 @@ namespace PoC.Worker.Rebus.Saga
                     RequestId = message.RequestId,
                     TotalBatches = Data.TotalBatches
                 });
+
+                // Problem: I stopped RabbitMQ in this step and:
+                // SAGA was updated and messaged was not ACK and BulkProcessingCompleted was not published
+                // I then enabled Rabbitmq
+                // so message was retried.
+                // it duplicated the SAGA process, it did wrongly by incrementing twice the ProcessedBatches :(
+                // was expecting if i enable o.EnableIdempotentSagas() it will not process the message again, but it will not publish the BulkProcessingCompleted
+                // but saw no changes while using EnableIdempotentSagas, was hoping to some Ids went to mongo but saw no changes
 
                 Console.WriteLine($"[SAGA] All batches are processed for RequestId {message.RequestId}. Marking as completed.");
                 //MarkAsComplete();
