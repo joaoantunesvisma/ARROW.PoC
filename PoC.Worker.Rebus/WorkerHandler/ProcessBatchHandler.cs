@@ -1,8 +1,8 @@
-﻿using PoC.Worker.Rebus.Models;
+﻿using PoC.Worker.Rebus.Saga.Models;
 using Rebus.Bus;
 using Rebus.Handlers;
 
-namespace PoC.Worker.Rebus
+namespace PoC.Worker.Rebus.WorkerHandler
 {
     public class ProcessBatchHandler : IHandleMessages<ProcessBatch>
     {

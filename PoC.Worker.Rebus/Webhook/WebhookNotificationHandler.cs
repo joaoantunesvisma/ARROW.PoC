@@ -1,7 +1,7 @@
-﻿using PoC.Worker.Rebus.Models;
+﻿using PoC.Worker.Rebus.Saga.Models;
 using Rebus.Handlers;
 
-namespace PoC.Worker.Rebus
+namespace PoC.Worker.Rebus.Webhook
 {
     public class WebhookNotificationHandler : IHandleMessages<BulkProcessingCompleted>
     {
@@ -9,7 +9,7 @@ namespace PoC.Worker.Rebus
         public Task Handle(BulkProcessingCompleted message)
         {
             Console.WriteLine($"Notify Webhook! Processing BulkProcessingCompleted " +
-                $"RequestId: {message.RequestId} TotalBatches: { message.TotalBatches})");
+                $"RequestId: {message.RequestId} TotalBatches: {message.TotalBatches})");
             return Task.CompletedTask;
         }
     }

@@ -1,10 +1,11 @@
 ﻿using PoC.Common.Models;
-using PoC.Worker.Rebus.Models;
+using PoC.Worker.Rebus.Saga.Models;
+using PoC.Worker.Rebus.WorkerHandler;
 using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Sagas;
 
-namespace PoC.Worker.Rebus
+namespace PoC.Worker.Rebus.Saga
 {
     public class BulkProcessingSaga : Saga<BulkProcessingSagaData>,
         IAmInitiatedBy<BulkProcessingRequest>,
@@ -27,6 +28,7 @@ namespace PoC.Worker.Rebus
             Data.TotalBatches = (message.Items.Count + 2) / 3; // Ex: If 10 items, we get 4 batches of size ≈3
             Data.ProcessedBatches = 0;
             Data.IsCompleted = false;
+            Data.LastUpdatedAtUtc = DateTime.UtcNow;
 
             Console.WriteLine($"[SAGA] Splitting RequestId {message.RequestId} into {Data.TotalBatches} batches.");
 
@@ -51,12 +53,15 @@ namespace PoC.Worker.Rebus
         public async Task Handle(BatchProcessed message)
         {
             Data.ProcessedBatches++;
+            Data.LastUpdatedAtUtc = DateTime.UtcNow;
 
             Console.WriteLine($"[SAGA] Processed {Data.ProcessedBatches}/{Data.TotalBatches} batches for RequestId {message.RequestId}.");
 
             if (Data.ProcessedBatches >= Data.TotalBatches)
             {
                 Data.IsCompleted = true;
+                Data.LastUpdatedAtUtc = DateTime.UtcNow;
+                Data.CompletedAtUtc = DateTime.UtcNow;
 
                 await _bus.Publish(new BulkProcessingCompleted
                 {

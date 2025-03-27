@@ -1,4 +1,4 @@
-﻿namespace PoC.Worker.Rebus.Models
+﻿namespace PoC.Worker.Rebus.WorkerHandler
 {
     public class ProcessBatch
     {

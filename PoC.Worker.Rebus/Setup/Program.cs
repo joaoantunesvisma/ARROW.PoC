@@ -2,47 +2,34 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using PoC.Common;
-using PoC.Worker.Rebus;
+using PoC.Worker.Rebus.Setup;
+using PoC.Worker.Rebus.WorkerHandler;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
-using PoC.Worker.Rebus.Models;
 using Rebus.Serialization.Json;
-using Rebus.Sagas;
-using Rebus.Persistence.InMem;
 
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((_, services) =>
     {
-        //// ✅ Register the correct serializers
-        //BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
-        //BsonSerializer.RegisterSerializer(typeof(object), new ObjectSerializer(ObjectSerializer.AllAllowedTypes));
 
-        //// ✅ Ensure BulkProcessingSagaData is correctly mapped
-        //BsonClassMap.RegisterClassMap<BulkProcessingSagaData>(cm =>
-        //{
-        //    cm.AutoMap();
-        //    cm.SetIsRootClass(true);
-        //    cm.SetDiscriminator("BulkProcessingSagaData");
-
-        //    //cm.MapIdProperty(c => c.Id).SetElementName("_id");
-        //    //cm.MapProperty(c => c.Revision).SetElementName("Revision");
-        //});
-
+        MongoDbConfig.ConfigureMongoDBSerialization();
         var mongoClient = new MongoClient(Constants.MongoDbConnectionString);
         var mongoDatabase = mongoClient.GetDatabase(Constants.MongoDbName);
 
         services.AddRebus(config => config
+            .Options(o => o.SetNumberOfWorkers(1)) // example setting workers to 5.
             .Transport(t => t.UseRabbitMq(Constants.RabbitMqConnectionString, Constants.BulkQueueName))
             //.Routing(r => r.TypeBased().Map<BulkProcessingRequest>(Constants.BulkQueueName)) // Explicit mapping
             .Routing(r => r.TypeBased().MapFallback(Constants.BulkQueueName)) // Automatically routes all messages to this queue
                                                                               //.Sagas(s => s.StoreInMemory())
         //.Sagas(s => s.StoreInMongoDb(mongoDatabase))
-        .Sagas(s => s.StoreInMemory())
+        //.Sagas(s => s.StoreInMemory())
+        .Sagas(s => s.StoreInMongoDb(mongoDatabase, 
+                // Optional: Custom collection name resolver
+                sagaType => $"Sagas_{sagaType.Name}", 
+                automaticallyCreateIndexes: true))
         .Serialization(s => s.UseSystemTextJson())
         );
 
